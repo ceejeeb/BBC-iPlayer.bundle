@@ -1,7 +1,7 @@
 import content
 import config
 
-TITLE  = "BBC iPlayer"
+TITLE  = "BBC iPlayer CeejeeB"
 PREFIX = "/video/iplayer"
 ART = 'art-default.jpg'
 ICON = 'icon-default.jpg'
@@ -20,7 +20,7 @@ def Start():
 
     ObjectContainer.title1 = TITLE
 
-    HTTP.CacheTime = CACHE_1HOUR
+    HTTP.CacheTime = 0
     HTTP.Headers['User-Agent'] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:22.0) Gecko/20100101 Firefox/22.0"
 
 ##########################################################################################
@@ -29,7 +29,7 @@ def MainMenu():
 
     oc = ObjectContainer()
 
-    title = "Highlights2"
+    title = "Highlights"
     oc.add(
         DirectoryObject(
             key = 
@@ -338,16 +338,13 @@ def ProgramsByLetter(url, letter):
 
     pageElement = HTML.ElementFromURL(url + letter)
 
-    for item in pageElement.xpath("//*[@id='atoz-content']//a[contains(@class,'tleo')]"):
+    for item in pageElement.xpath("//*[contains(@class,'atoz-grid')]//a[contains(@class,'list-content-item')]"):
         url = item.xpath("./@href")[0]
-
-        if not "/iplayer/brand" in url:
-            continue
 
         if not url.startswith("http"):
             url = config.BBC_URL + url
 
-        title = item.xpath(".//*[@class='title']/text()")[0].strip()
+        title = item.xpath(".//*[contains(@class, 'list-content-item__title')]/text()")[0].strip()
 
         oc.add(
             DirectoryObject(
