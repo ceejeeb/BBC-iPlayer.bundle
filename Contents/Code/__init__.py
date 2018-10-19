@@ -20,7 +20,7 @@ def Start():
 
     ObjectContainer.title1 = TITLE
 
-    HTTP.CacheTime = CACHE_1HOUR
+    HTTP.CacheTime = CACHE_1MINUTE
     HTTP.Headers['User-Agent'] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:22.0) Gecko/20100101 Firefox/22.0"
 
 ##########################################################################################
@@ -422,7 +422,7 @@ def AllEpisodes(title, url, xpath, page_num = None):
         try:
             title = item.xpath(".//a//*[contains(@class, 'content-item__title')]/text()")[0].strip()
         except:
-            continue
+            title = show
 
         try:
             thumb = item.xpath(".//*[contains(@class,'image')]//*/@srcset")[0].split(' ')[0]
