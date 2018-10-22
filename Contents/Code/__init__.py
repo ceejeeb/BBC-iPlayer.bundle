@@ -198,7 +198,7 @@ def TVChannels(title):
                     ),
                 title = channel.title,
                 summary = unicode(L(channel_id)),
-                thumb = R("%s.png" % channel_id)
+                thumb = R("%s.png" % channel.thumb)
             )
         )
 
@@ -218,54 +218,58 @@ def Channel(channel_id):
         except:
             pass # Live stream not currently available
 
-    title = "Highlights"
+    title = "Featured"
     oc.add(
         DirectoryObject(
             key =
                 Callback(
-                    Highlights,
+                    AllEpisodes,
                     title = title,
-                    url = channel.highlights_url()
+                    url = channel.highlights_url(),
+                    xpath = "//*[@class='gel-layout']//*[contains(@class, 'gel-layout__item')]",
+                    page_num = 1,
+                    mixed_shows = True
                 ),
             title = title,
             thumb = R("%s.png" % channel_id)
         )
     )
 
-    # Add the last week's worth of schedules
-    now = Datetime.Now()
-    for i in range (0, 7):
-        date = now - Datetime.Delta(days = i)
-        
-        oc.add(
-            DirectoryObject(
-                key = 
-                    Callback(
-                        VideosFromSchedule,
-                        title = channel.title,
-                        url = "%s/%02d%02d%02d" % (channel.schedule_url, date.year, date.month, date.day)
-                    ),
-                title = DAYS[date.weekday()],
-                thumb = R("%s.png" % channel_id)
+    if channel.has_scheduled_programmes():
+        # Add the last week's worth of schedules
+        now = Datetime.Now()
+        for i in range (0, 7):
+            date = now - Datetime.Delta(days = i)
+            
+            oc.add(
+                DirectoryObject(
+                    key = 
+                        Callback(
+                            VideosFromSchedule,
+                            title = channel.title,
+                            url = "%s/%02d%02d%02d" % (channel.schedule_url, date.year, date.month, date.day)
+                        ),
+                    title = DAYS[date.weekday()],
+                    thumb = R("%s.png" % channel_id)
+                )
             )
-        )
 
     return oc
 
 ##########################################################################################
 @route(PREFIX + "/VideosFromSchedule")
 def VideosFromSchedule(title, url, channel_id = None):
-    return Episodes(title, url, "//*[contains(@class, 'broadcast-list')]//*[contains(@class, 'broadcast')]")
+    return AllEpisodes(title, url, "//*[contains(@class, 'schedule-container')]//*[@class='gel-layout']", 1, True)
 
 ##########################################################################################
 @route(PREFIX + '/boxsets')
 def BoxSets(title, url):
-    return AllEpisodes(title, url, "//*[@class='gel-layout']//*[contains(@class, 'grid__item')]", 1, True)
+    return AllEpisodes(title, url, "//*[@class='gel-layout']//*[contains(@class, 'gel-layout__item')]", 1, True)
 
 ##########################################################################################
 @route(PREFIX + '/mostpopular')
 def MostPopular(title, url):
-    return AllEpisodes(title, url, "//*[@class='gel-layout']//*[contains(@class, 'grid__item')]", 1, True)
+    return AllEpisodes(title, url, "//*[@class='gel-layout']//*[contains(@class, 'gel-layout__item')]", 1, True)
 
 ##########################################################################################
 @route(PREFIX + '/categories')
@@ -289,9 +293,12 @@ def Categories(title):
             DirectoryObject(
                 key = 
                     Callback(
-                        Highlights2,
+                        AllEpisodes,
                         title = title,
-                        url = url
+                        url = url,
+                        xpath = "//*[@class='gel-layout']//*[contains(@class, 'gel-layout__item')]",
+                        page_num = 1,
+                        mixed_shows = True
                     ),
                 title = title
             )
@@ -416,6 +423,8 @@ def AllEpisodes(title, url, xpath, page_num = None, mixed_shows = False):
 
         try:
             title = item.xpath(".//a//*[contains(@class, 'content-item__title')]/text()")[0].strip()
+            if show and Client.Platform in ["Plex Home Theater", "Konvergo", "iOS", "Android"]:
+                title = "%s, %s" % (show, title)
         except:
             title = show
 
