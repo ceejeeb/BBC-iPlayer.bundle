@@ -52,8 +52,7 @@ radio_stations = {
     'bbc_radio_five_live':              'BBC Radio 5 Live',
     'bbc_radio_five_live_sports_extra': 'BBC Radio 5 Live Sports Extra',
     'bbc_6music':                       'BBC 6 Music',
-    'bbc_asian_network':                'BBC Asian Network',
-    
+    'bbc_asian_network':                'BBC Asian Network',  
 }
 
 ordered_radio_stations = [
@@ -68,72 +67,3 @@ ordered_radio_stations = [
     'bbc_6music',
     'bbc_asian_network'
 ]
-
-def slugify(string):
-    slug = string.lower()
-    slug = slug.replace("&", "and")
-    slug = slug.replace(" ", "_")
-    for char in ["'", "-", ", ", "!"]:
-        slug = slug.replace(char, "")
-    return slug
-
-class Category(object):
-    def __init__(self, title, subcategories):
-        self.title = title
-        self.id = slugify(title)
-        self.subcategories = [Category(subtitle, []) for subtitle in subcategories]
-        self.subcategory = dict([(category.id, category) for category in self.subcategories])
-
-    def popular_url(self):
-        return "http://feeds.bbc.co.uk/iplayer/popular/%s/tv" % self.id
-            
-    def highlights_url(self):
-        return "http://feeds.bbc.co.uk/iplayer/highlights/%s/tv" % self.id
-
-    def subcategory_url(self, subcategory_id):
-        return "http://feeds.bbc.co.uk/iplayer/%s/%s/list" % (self.id, subcategory_id)
-        
-    def genre_url(self, channel_id):            
-        return "http://www.bbc.co.uk/%s/genres/%s/player/episodes.json" % (channel_id, self.id)
-
-categories = [
-    Category("Children's", ["Animation", "Drama", "Entertainment & Comedy", "Factual", "Games & Quizzes", "Music", "Other"]),
-    Category("Comedy", ["Music", "Satire", "Sitcoms", "Sketch", "Spoof", "Standup", "Other"]),
-    Category("Drama", ["Action & Adventure", "Biographical", "Classic & Period", "Crime", "Historical", "Horror & Supernatural", "Legal & Courtroom", "Medical", "Musical", "Psychological", "Relationships & Romance", "SciFi & Fantasy", "Soaps", "Thriller", "War & Disaster", "Other"]),
-    Category("Entertainment", ["Discussion & Talk Shows", "Games & Quizzes", "Makeovers", "Phone-ins", "Reality", "Talent Shows", "Variety Shows", "Other"]),
-    Category("Factual", ["Antiques", "Arts, Culture & the Media", "Beauty & Style", "Cars & Motors", "Cinema", "Consumer", "Crime & Justice", "Disability", "Families & Relationships", "Food & Drink", "Health & Wellbeing", "History", "Homes & Gardens", "Life Stories", "Money", "Pets & Animals", "Politics", "Science & Nature", "Travel", "Other"]),
-    Category("Learning", ["Pre-School", "5-11", "Adult", "Other"]),
-    Category("Music", ["Classic Pop & Rock", "Classical", "Country", "Dance & Electronica", "Desi", "Easy Listening, Soundtracks & Musicals", "Folk", "Hip Hop, R'n'B & Dancehall", "Jazz & Blues", "Pop & Chart", "Rock & Indie", "Soul & Reggae", "World", "Other"]),
-    Category("Sport", ["Boxing", "Cricket", "Cycling", "Equestrian", "Football", "Formula One", "Golf", "Horse Racing", "Motorsport", "Olympics", "Rugby League", "Rugby Union", "Tennis", "Other"])
-]
-category = dict([(category.id, category) for category in categories])
-
-class Format(object):
-    def __init__(self, title):
-        self.title = title
-        self.id = slugify(title)
-
-    def url(self, channel_id=None):
-        if channel_id:
-            return "http://www.bbc.co.uk/%s/programmes/formats/%s/player/episodes.json" % (channel_id, self.id)
-        else:
-            return "http://www.bbc.co.uk/programmes/formats/%s/player/episodes.json" % (self.id)
-
-formats = [
-    Format("Animation"),
-    Format("Appeals"),
-    Format("Bulletins"),
-    Format("Discussion & Talk"), 
-    Format("Docudramas"), 
-    Format("Documentaries"),
-    Format("Films"),
-    Format("Games & Quizzes"),
-    Format("Magazines & Reviews"),
-    Format("Makeovers"),
-    Format("Performances & Events"),
-    Format("Phone-ins"),
-    Format("Readings"),
-    Format("Reality"),
-    Format("Talent Shows")
-]
-format = dict([(format.id, format) for format in formats])

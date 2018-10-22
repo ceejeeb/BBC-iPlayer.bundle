@@ -13,5 +13,6 @@ Progress
 * Channels - ~Broken~ Working
 * Categories - ~Broken~ Working
 * Radio - ~Broken~ Working
+* Search ~Broken~ Working
 * Boxsets - New
 * Radio One - New

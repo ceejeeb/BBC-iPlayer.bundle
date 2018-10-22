@@ -258,7 +258,7 @@ def Channel(channel_id):
 
 ##########################################################################################
 @route(PREFIX + "/VideosFromSchedule")
-def VideosFromSchedule(title, url, channel_id = None):
+def VideosFromSchedule(title, url):
     return AllEpisodes(title, url, "//*[contains(@class, 'schedule-container')]//*[@class='gel-layout']", 1, True)
 
 ##########################################################################################
@@ -372,7 +372,7 @@ def Episode(title, url, xpath):
     
 
     if allEpisodesUrl:
-        return AllEpisodes(title, allEpisodesUrl, "//*[@class='gel-layout']//*[contains(@class, 'grid__item')]")
+        return AllEpisodes(title, allEpisodesUrl, "//*[@class='gel-layout']//*[contains(@class, 'grid__item')]", 1, False)
 
     return NoProgrammesFound(oc, title)
 
@@ -382,16 +382,17 @@ def Search(query):
 
     url = config.BBC_SEARCH_TV_URL % String.Quote(query)
 
-    return Episodes(
+    return AllEpisodes(
         title = query,
         url = url,
-        xpath = "//*[contains(@class,'iplayer-list')]//*[contains(@class,'list-item')]",
-        page_num = 1
+        xpath = "//*[@class='gel-layout']//li[contains(@class, 'gel-layout__item')]",
+        page_num = 1,
+        mixed_shows = True
     )
 
 ##########################################################################################
-@route(PREFIX + '/allepisodes', page_num = int)
-def AllEpisodes(title, url, xpath, page_num = None, mixed_shows = False):
+@route(PREFIX + '/allepisodes', page_num = int, mixed_shows = bool)
+def AllEpisodes(title, url, xpath, page_num, mixed_shows):
     oc = ObjectContainer(title2 = title)
     orgURL = url
 
@@ -423,8 +424,6 @@ def AllEpisodes(title, url, xpath, page_num = None, mixed_shows = False):
 
         try:
             title = item.xpath(".//a//*[contains(@class, 'content-item__title')]/text()")[0].strip()
-            if show and Client.Platform in ["Plex Home Theater", "Konvergo", "iOS", "Android"]:
-                title = "%s, %s" % (show, title)
         except:
             title = show
 
@@ -438,7 +437,7 @@ def AllEpisodes(title, url, xpath, page_num = None, mixed_shows = False):
         except:
             summary = None
             
-        if(mixed_shows):
+        if mixed_shows:
             oc.add(
                 DirectoryObject(
                     key = 
@@ -469,7 +468,7 @@ def AllEpisodes(title, url, xpath, page_num = None, mixed_shows = False):
         # See if we need a next button.
     if len(pageElement.xpath("//a[contains(@class, 'pagination__direction--next')]")) > 0:            
         oc.add(
-            NextPageObject(
+            DirectoryObject(
                 key = 
                     Callback(
                         AllEpisodes,
