@@ -260,17 +260,12 @@ def VideosFromSchedule(title, url, channel_id = None):
 ##########################################################################################
 @route(PREFIX + '/boxsets')
 def BoxSets(title, url):
-    return Episodes(title, url, "//*[contains(@class, 'list__grid')]//*[contains(@class, 'grid__item')]")
-
-#########################################################################################
-@route(PREFIX + '/highlights')
-def Highlights(title, url):
-    return Episodes(title, url, "//*[contains(@class, 'list__grid')]//*[contains(@class, 'grid__item')]")
+    return AllEpisodes(title, url, "//*[@class='gel-layout']//*[contains(@class, 'grid__item')]", 1, True)
 
 ##########################################################################################
 @route(PREFIX + '/mostpopular')
 def MostPopular(title, url):
-    return Episodes(title, url, "//*[contains(@class, 'most-popular__item')]")
+    return AllEpisodes(title, url, "//*[@class='gel-layout']//*[contains(@class, 'grid__item')]", 1, True)
 
 ##########################################################################################
 @route(PREFIX + '/categories')
@@ -389,7 +384,7 @@ def Search(query):
 
 ##########################################################################################
 @route(PREFIX + '/allepisodes', page_num = int)
-def AllEpisodes(title, url, xpath, page_num = None):
+def AllEpisodes(title, url, xpath, page_num = None, mixed_shows = False):
     oc = ObjectContainer(title2 = title)
     orgURL = url
 
@@ -434,16 +429,30 @@ def AllEpisodes(title, url, xpath, page_num = None):
         except:
             summary = None
             
-
-        oc.add(
-            EpisodeObject(
-                url = link,
-                title = title,
-                show = show,
-                thumb = Resource.ContentsOfURLWithFallback(thumb),
-                summary = summary
+        if(mixed_shows):
+            oc.add(
+                DirectoryObject(
+                    key = 
+                        Callback(
+                            Episode,
+                            title = title,
+                            url = link,
+                            xpath = "//*[contains(@class, 'grid list__grid')]//*[contains(@class, 'gel-layout__item')]"
+                        ),
+                    title = title,
+                    thumb = Resource.ContentsOfURLWithFallback(thumb)
+                )
             )
-        )
+        else:
+            oc.add(
+                EpisodeObject(
+                    url = link,
+                    title = title,
+                    show = show,
+                    thumb = Resource.ContentsOfURLWithFallback(thumb),
+                    summary = summary
+                )
+            )
 
     if len(oc) < 1:
         return NoProgrammesFound(oc, title)
@@ -454,11 +463,12 @@ def AllEpisodes(title, url, xpath, page_num = None):
             NextPageObject(
                 key = 
                     Callback(
-                        Episodes,
+                        AllEpisodes,
                         title = oc.title2, 
                         url = orgURL,
                         xpath = xpath,
-                        page_num = int(page_num) + 1
+                        page_num = int(page_num) + 1,
+                        mixed_shows = mixed_shows
                     ),
                 title = 'More...'
             )
