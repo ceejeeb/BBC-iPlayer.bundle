@@ -10,6 +10,7 @@ Progress
 * A to Z - ~Broken~ Working
 * Channels - Broken
 * Categories - Broken
-* Highlights - Broken
-* Popular - Broken
+* Highlights - Removed Replaced with Boxsets
+* Popular - ~Broken~ Working
 * Radio - Broken
+* Boxsets - Working
