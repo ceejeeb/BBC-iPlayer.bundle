@@ -8,9 +8,9 @@ Progress
 
 * Live TV - Seems to be working (Not changed)
 * A to Z - ~Broken~ Working
+* Popular - ~Broken~ Working
+* Boxsets - Working
+* Highlights - Removed Replaced with Boxsets
 * Channels - Broken
 * Categories - Broken
-* Highlights - Removed Replaced with Boxsets
-* Popular - ~Broken~ Working
 * Radio - Broken
-* Boxsets - Working
