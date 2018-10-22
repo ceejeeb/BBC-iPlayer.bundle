@@ -9,8 +9,9 @@ Progress
 * Live TV - Seems to be working (Not changed)
 * A to Z - ~Broken~ Working
 * Popular - ~Broken~ Working
-* Boxsets - Working
 * Highlights - Removed Replaced with Boxsets
-* Channels - Broken
-* Categories - Broken
-* Radio - Broken
+* Channels - ~Broken~ Working
+* Categories - ~Broken~ Working
+* Radio - ~Broken~ Working
+* Boxsets - New
+* Radio One - New
