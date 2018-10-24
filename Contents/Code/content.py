@@ -1,21 +1,23 @@
+import config
+
 class Channel(object):
     def __init__(self, title, thumb, channel_id, live_id):
         self.title = title
         self.thumb = thumb
         self.channel_id = channel_id
         self.live_id = live_id
-        self.schedule_url = "http://www.bbc.co.uk/iplayer/schedules/%s" % (self.channel_id)
+        self.schedule_url = config.BBC_URL + "/iplayer/schedules/%s" % (self.channel_id)
+
+        base = config.BBC_URL
+        if not self.channel_id in ['bbcone', 'bbctwo', 'bbcfour']:
+            base = "%s/tv" % (base)
+        self.url = "%s/%s" % (base, self.channel_id)
 
     def highlights_url(self):
-        base = "http://www.bbc.co.uk/"
-        
-        if not self.channel_id in ['bbcparliament']:
-            base = base + 'tv/'
-            
-        return base + "%s" % self.channel_id
+        return self.url
 
-    def popular_url(self):
-        return "http://feeds.bbc.co.uk/iplayer/%s/popular" % self.channel_id
+    def az_url(self):
+        return self.url + "/a-z"
 
     def has_live_broadcasts(self):
         return self.live_id != None
@@ -24,7 +26,7 @@ class Channel(object):
         return self.live_id != None
         
     def live_url(self):
-        return "http://www.bbc.co.uk/iplayer/live/%s" % self.channel_id
+        return config.BBC_URL + "/iplayer/live/%s" % self.channel_id
 
 tv_channels = {
     #                           title                thumb               channel_id      live_id
@@ -40,14 +42,26 @@ tv_channels = {
     'bbcalba':          Channel('BBC Alba',          'bbcalba',         'bbcalba',       'bbc_alba'),
     's4c':              Channel('S4C',               's4c',             's4c',           's4cpbs')
 }
-ordered_tv_channels = ['bbcone', 'bbctwo', 'bbcthree', 'bbcfour', 'radio1', 'cbbc', 'cbeebies', 'bbcnews', 'parliament', 'bbcalba', 's4c']
+ordered_tv_channels = [
+    'bbcone', 
+    'bbctwo', 
+    'bbcthree', 
+    'bbcfour', 
+    'radio1', 
+    'cbbc', 
+    'cbeebies', 
+    'bbcnews', 
+    'parliament', 
+    'bbcalba', 
+    's4c'
+    ]
 
 radio_stations = {
     'bbc_radio_one':                    'BBC Radio 1',
     'bbc_1xtra':                        'BBC 1Xtra',
     'bbc_radio_two':                    'BBC Radio 2',
     'bbc_radio_three':                  'BBC Radio 3',
-    'bbc_radio_fourfm':                 'BBC Radio 4',
+    'bbc_radio_four':                   'BBC Radio 4',
     'bbc_radio_four_extra':             'BBC Radio 4 Extra',
     'bbc_radio_five_live':              'BBC Radio 5 Live',
     'bbc_radio_five_live_sports_extra': 'BBC Radio 5 Live Sports Extra',
@@ -60,7 +74,7 @@ ordered_radio_stations = [
     'bbc_1xtra',
     'bbc_radio_two',
     'bbc_radio_three',
-    'bbc_radio_fourfm',
+    'bbc_radio_four',
     'bbc_radio_four_extra',
     'bbc_radio_five_live',
     'bbc_radio_five_live_sports_extra',

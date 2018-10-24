@@ -2,14 +2,9 @@ import content
 import config
 
 TITLE  = "BBC iPlayer CeejeeB"
-PREFIX = "/video/iplayer"
+PREFIX = "/video/iplayer/ceejeeb"
 ART = 'art-default.jpg'
 ICON = 'icon-default.jpg'
-
-RE_EPISODE = Regex("Episode ([0-9]+)")
-RE_EPISODE_ALT = Regex("Series [0-9]+ *: *([0-9]+)\.")
-RE_SERIES = Regex("Series ([0-9]+)")
-RE_DURATION = Regex("([0-9]+) *(mins)*")
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -38,7 +33,8 @@ def MainMenu():
                     title = title,
                     url = config.BBC_URL + '/iplayer/group/p05pn9jr'
                 ),
-            title = title
+            title = title,
+            thumb = R("icon-default.jpg")
         )
     )
 
@@ -51,7 +47,8 @@ def MainMenu():
                     title = title,
                     url = config.BBC_URL + '/iplayer/most-popular'
                 ),
-            title = title
+            title = title,
+            thumb = R("icon-default.jpg")
         )
     )
 
@@ -63,7 +60,8 @@ def MainMenu():
                     Live,
                     title = title
                 ),
-            title = title
+            title = title,
+            thumb = R("icon-default.jpg")
         )
     )
 
@@ -75,7 +73,8 @@ def MainMenu():
                     LiveRadio,
                     title = title
                 ),
-            title = title
+            title = title,
+            thumb = R("icon-default.jpg")
         )
     )
 
@@ -87,7 +86,8 @@ def MainMenu():
                     Categories,
                     title = title
                 ),
-            title = title
+            title = title,
+            thumb = R("icon-default.jpg")
         )
     )
 
@@ -100,7 +100,8 @@ def MainMenu():
                     title = title,
                     url = config.BBC_URL + '/iplayer/a-z/'
                 ),
-            title = title
+            title = title,
+            thumb = R("icon-default.jpg")
         )
     )
 
@@ -114,7 +115,8 @@ def MainMenu():
             key = 
                 Callback(Search),
                 title = title, 
-                prompt = title
+                prompt = title,
+                thumb = R("icon-default.jpg")
         )
     )
 
@@ -152,17 +154,12 @@ def LiveRadio(title):
 
     for station in content.ordered_radio_stations:
 
-        station_img_id = station
-
-        if station in ['bbc_radio_fourfm']:
-            station_img_id = 'bbc_radio_four'
-
         if Client.Product in ['Plex Web', 'Plex for Xbox One'] and not Client.Platform == 'Safari':
             oc.add(
                 CreatePlayableObject(
                     title = content.radio_stations[station],
-                    thumb = R(station + '.png'),
-                    art = config.RADIO_IMG_URL % station_img_id,
+                    thumb = R("%s.png"  % station),
+                    art = config.RADIO_IMG_URL % station,
                     type = 'mp3',
                     url = config.MP3_URL % station
                 )
@@ -171,8 +168,8 @@ def LiveRadio(title):
             oc.add(
                 CreatePlayableObject(
                     title = content.radio_stations[station],
-                    thumb = R(station + '.png'),
-                    art = config.RADIO_IMG_URL % station_img_id,
+                    thumb = R("%s.png"  % station),
+                    art = config.RADIO_IMG_URL % station,
                     type = 'hls',
                     url = config.HLS_URL % station
                 )
@@ -218,19 +215,18 @@ def Channel(channel_id):
         except:
             pass # Live stream not currently available
 
-    title = "Featured"
     oc.add(
         DirectoryObject(
             key =
                 Callback(
                     AllEpisodes,
-                    title = title,
+                    title = "Featured",
                     url = channel.highlights_url(),
                     xpath = "//*[@class='gel-layout']//*[contains(@class, 'gel-layout__item')]",
                     page_num = 1,
                     mixed_shows = True
                 ),
-            title = title,
+            title = "Featured",
             thumb = R("%s.png" % channel_id)
         )
     )
@@ -241,6 +237,11 @@ def Channel(channel_id):
         for i in range (0, 7):
             date = now - Datetime.Delta(days = i)
             
+            if i == 0:
+                title = "Today"
+            else:
+                title = DAYS[date.weekday()] + " " + str(date.day) + suffix(date.day)
+            
             oc.add(
                 DirectoryObject(
                     key = 
@@ -249,11 +250,26 @@ def Channel(channel_id):
                             title = channel.title,
                             url = "%s/%02d%02d%02d" % (channel.schedule_url, date.year, date.month, date.day)
                         ),
-                    title = DAYS[date.weekday()],
+                    title = title,
                     thumb = R("%s.png" % channel_id)
                 )
             )
 
+    oc.add(
+        DirectoryObject(
+            key =
+                Callback(
+                    AllEpisodes,
+                    title = "A-Z",
+                    url = channel.az_url(),
+                    xpath = "//*[@class='gel-layout']//*[contains(@class, 'gel-layout__item')]",
+                    page_num = 1,
+                    mixed_shows = True
+                ),
+            title = "A-Z",
+            thumb = R("%s.png" % channel_id)
+        )
+    )
     return oc
 
 ##########################################################################################
@@ -281,8 +297,10 @@ def Categories(title):
     for item in pageElement.xpath("//*[@class='categories-container']//a[@class='typo typo--canary stat']"): 
         url = item.xpath("./@href")[0]
 
-        if not "/iplayer/categories" in url:
+        if not "/iplayer/categories/" in url:
             continue
+
+        url = url.replace("featured", "a-z")
 
         if not url.startswith("http"):
             url = config.BBC_URL + url
@@ -300,7 +318,8 @@ def Categories(title):
                         page_num = 1,
                         mixed_shows = True
                     ),
-                title = title
+                title = title,
+                thumb = R("icon-default.jpg")
             )
         )
 
@@ -320,7 +339,8 @@ def AToZ(title, url):
                         url = url,
                         letter = letter.lower()
                     ),
-                title = letter.upper()
+                title = letter.upper(),
+                thumb = R("icon-default.jpg")
             )
         )
 
@@ -341,6 +361,11 @@ def ProgramsByLetter(url, letter):
 
         title = item.xpath(".//*[contains(@class, 'list-content-item__title')]/text()")[0].strip()
 
+        try:
+            thumb = item.xpath(".//*[contains(@class,'image')]//*/@srcset")[0].split(' ')[0]
+        except:
+            thumb = None
+
         oc.add(
             DirectoryObject(
                 key = 
@@ -350,7 +375,8 @@ def ProgramsByLetter(url, letter):
                         url = url,
                         xpath = "//*[contains(@class, 'grid list__grid')]//*[contains(@class, 'gel-layout__item')]"
                     ),
-                title = title
+                title = title,
+                thumb = Resource.ContentsOfURLWithFallback(thumb)
             )
         )
 
@@ -436,6 +462,11 @@ def AllEpisodes(title, url, xpath, page_num, mixed_shows):
             summary = item.xpath(".//a//*[contains(@class, 'content-item__description')]/text()")[1].strip()
         except:
             summary = None
+
+        try:
+            background = pageElement.xpath(".//*[contains(@class,'rs-image hero-header__background__image')]//*/@srcset")[0]
+        except:
+            background = None
             
         if mixed_shows:
             oc.add(
@@ -458,6 +489,7 @@ def AllEpisodes(title, url, xpath, page_num, mixed_shows):
                     title = title,
                     show = show,
                     thumb = Resource.ContentsOfURLWithFallback(thumb),
+                    art = Resource.ContentsOfURLWithFallback(background),
                     summary = summary
                 )
             )
@@ -628,3 +660,7 @@ def PlayAudio(url):
         return Redirect(stream_url)
     else:
         raise Ex.MediaNotAvailable
+
+#################################################################################################### 
+def suffix(d):
+    return 'th' if 11<=d<=13 else {1:'st',2:'nd',3:'rd'}.get(d%10, 'th')
