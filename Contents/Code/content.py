@@ -29,18 +29,18 @@ class Channel(object):
         return config.BBC_URL + "/iplayer/live/%s" % self.channel_id
 
 tv_channels = {
-    #                           title                thumb               channel_id      live_id
-    'bbcone':           Channel('BBC One',           'bbcone',          'bbcone',        'bbc_one_london'),
-    'bbctwo':           Channel('BBC Two',           'bbctwo',          'bbctwo',        'bbc_two_england'),
-    'bbcthree':         Channel('BBC Three',         'bbcthree',        'bbcthree',      'bbc_three'),
-    'bbcfour':          Channel('BBC Four',          'bbcfour',         'bbcfour',       'bbc_four'),
-    'radio1':           Channel('Radio One',         'bbc_radio_one',   'radio1',         None),
-    'cbbc':             Channel('CBBC',              'cbbc',            'cbbc',          'cbbc'),
-    'cbeebies':         Channel('CBeebies',          'cbeebies',        'cbeebies',      'cbeebies'),
-    'bbcnews':          Channel('BBC News Channel',  'bbcnews',         'bbcnews',       'bbc_news24'),
-    'parliament':       Channel('BBC Parliament',    'parliament',      'bbcparliament', 'bbc_parliament'),
-    'bbcalba':          Channel('BBC Alba',          'bbcalba',         'bbcalba',       'bbc_alba'),
-    's4c':              Channel('S4C',               's4c',             's4c',           's4cpbs')
+    #                           title                thumb                  channel_id       live_id
+    'bbcone':           Channel('BBC One',           'bbcone.png',          'bbcone',        'bbc_one_london'),
+    'bbctwo':           Channel('BBC Two',           'bbctwo.png',          'bbctwo',        'bbc_two_england'),
+    'bbcthree':         Channel('BBC Three',         'bbcthree.png',        'bbcthree',      'bbc_three'),
+    'bbcfour':          Channel('BBC Four',          'bbcfour.png',         'bbcfour',       'bbc_four'),
+    'radio1':           Channel('Radio One',         'bbc_radio_one.png',   'radio1',         None),
+    'cbbc':             Channel('CBBC',              'cbbc.png',            'cbbc',          'cbbc'),
+    'cbeebies':         Channel('CBeebies',          'cbeebies.png',        'cbeebies',      'cbeebies'),
+    'bbcnews':          Channel('BBC News Channel',  'bbcnews.png',         'bbcnews',       'bbc_news24'),
+    'parliament':       Channel('BBC Parliament',    'parliament.png',      'bbcparliament', 'bbc_parliament'),
+    'bbcalba':          Channel('BBC Alba',          'bbcalba.png',         'bbcalba',       'bbc_alba'),
+    's4c':              Channel('S4C',               's4c.png',             's4c',           's4cpbs')
 }
 ordered_tv_channels = [
     'bbcone', 

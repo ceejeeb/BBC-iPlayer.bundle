@@ -195,7 +195,7 @@ def TVChannels(title):
                     ),
                 title = channel.title,
                 summary = unicode(L(channel_id)),
-                thumb = R("%s.png" % channel.thumb)
+                thumb = R(channel.thumb)
             )
         )
 
@@ -227,7 +227,7 @@ def Channel(channel_id):
                     mixed_shows = True
                 ),
             title = "Featured",
-            thumb = R("%s.png" % channel_id)
+            thumb = R(channel.thumb)
         )
     )
 
@@ -251,7 +251,7 @@ def Channel(channel_id):
                             url = "%s/%02d%02d%02d" % (channel.schedule_url, date.year, date.month, date.day)
                         ),
                     title = title,
-                    thumb = R("%s.png" % channel_id)
+                    thumb = R(channel.thumb)
                 )
             )
 
@@ -267,7 +267,7 @@ def Channel(channel_id):
                     mixed_shows = True
                 ),
             title = "A-Z",
-            thumb = R("%s.png" % channel_id)
+            thumb = R(channel.thumb)
         )
     )
     return oc
