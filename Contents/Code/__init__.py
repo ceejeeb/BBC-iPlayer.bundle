@@ -1,8 +1,8 @@
 import content
 import config
 
-TITLE  = "BBC iPlayer CeejeeB"
-PREFIX = "/video/iplayer/ceejeeb"
+TITLE  = "BBC iPlayer"
+PREFIX = "/video/iplayer"
 ART = 'art-default.jpg'
 ICON = 'icon-default.jpg'
 
