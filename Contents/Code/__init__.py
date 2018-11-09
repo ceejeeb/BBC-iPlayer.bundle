@@ -6,11 +6,6 @@ PREFIX = "/video/iplayer"
 ART = 'art-default.jpg'
 ICON = 'icon-default.jpg'
 
-RE_EPISODE = Regex("Episode ([0-9]+)")
-RE_EPISODE_ALT = Regex("Series [0-9]+ *: *([0-9]+)\.")
-RE_SERIES = Regex("Series ([0-9]+)")
-RE_DURATION = Regex("([0-9]+) *(mins)*")
-
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 RE_FILE = Regex('File1=(https?://.+)')
@@ -29,16 +24,17 @@ def MainMenu():
 
     oc = ObjectContainer()
 
-    title = "Highlights2"
+    title = "Box Sets"
     oc.add(
         DirectoryObject(
             key = 
                 Callback(
-                    Highlights,
+                    BoxSets,
                     title = title,
-                    url = config.BBC_URL + '/iplayer'
+                    url = config.BBC_URL + '/iplayer/group/p05pn9jr'
                 ),
-            title = title
+            title = title,
+            thumb = R("icon-default.jpg")
         )
     )
 
@@ -49,9 +45,10 @@ def MainMenu():
                 Callback(
                     MostPopular,
                     title = title,
-                    url = config.BBC_URL + '/iplayer/group/most-popular'
+                    url = config.BBC_URL + '/iplayer/most-popular'
                 ),
-            title = title
+            title = title,
+            thumb = R("icon-default.jpg")
         )
     )
 
@@ -63,7 +60,8 @@ def MainMenu():
                     Live,
                     title = title
                 ),
-            title = title
+            title = title,
+            thumb = R("icon-default.jpg")
         )
     )
 
@@ -75,7 +73,8 @@ def MainMenu():
                     LiveRadio,
                     title = title
                 ),
-            title = title
+            title = title,
+            thumb = R("icon-default.jpg")
         )
     )
 
@@ -87,7 +86,8 @@ def MainMenu():
                     Categories,
                     title = title
                 ),
-            title = title
+            title = title,
+            thumb = R("icon-default.jpg")
         )
     )
 
@@ -100,7 +100,8 @@ def MainMenu():
                     title = title,
                     url = config.BBC_URL + '/iplayer/a-z/'
                 ),
-            title = title
+            title = title,
+            thumb = R("icon-default.jpg")
         )
     )
 
@@ -114,7 +115,8 @@ def MainMenu():
             key = 
                 Callback(Search),
                 title = title, 
-                prompt = title
+                prompt = title,
+                thumb = R("icon-default.jpg")
         )
     )
 
@@ -152,17 +154,12 @@ def LiveRadio(title):
 
     for station in content.ordered_radio_stations:
 
-        station_img_id = station
-
-        if station in ['bbc_radio_fourfm']:
-            station_img_id = 'bbc_radio_four'
-
         if Client.Product in ['Plex Web', 'Plex for Xbox One'] and not Client.Platform == 'Safari':
             oc.add(
                 CreatePlayableObject(
                     title = content.radio_stations[station],
-                    thumb = R(station + '.png'),
-                    art = config.RADIO_IMG_URL % station_img_id,
+                    thumb = R("%s.png"  % station),
+                    art = config.RADIO_IMG_URL % station,
                     type = 'mp3',
                     url = config.MP3_URL % station
                 )
@@ -171,8 +168,8 @@ def LiveRadio(title):
             oc.add(
                 CreatePlayableObject(
                     title = content.radio_stations[station],
-                    thumb = R(station + '.png'),
-                    art = config.RADIO_IMG_URL % station_img_id,
+                    thumb = R("%s.png"  % station),
+                    art = config.RADIO_IMG_URL % station,
                     type = 'hls',
                     url = config.HLS_URL % station
                 )
@@ -198,7 +195,7 @@ def TVChannels(title):
                     ),
                 title = channel.title,
                 summary = unicode(L(channel_id)),
-                thumb = R("%s.png" % channel_id)
+                thumb = R(channel.thumb)
             )
         )
 
@@ -218,66 +215,77 @@ def Channel(channel_id):
         except:
             pass # Live stream not currently available
 
-    title = "Highlights"
     oc.add(
         DirectoryObject(
             key =
                 Callback(
-                    Highlights,
-                    title = title,
-                    url = channel.highlights_url()
+                    AllEpisodes,
+                    title = "Featured",
+                    url = channel.highlights_url(),
+                    xpath = "//*[@class='gel-layout']//*[contains(@class, 'gel-layout__item')]",
+                    page_num = 1,
+                    mixed_shows = True
                 ),
-            title = title,
-            thumb = R("%s.png" % channel_id)
+            title = "Featured",
+            thumb = R(channel.thumb)
         )
     )
 
-    # Add the last week's worth of schedules
-    now = Datetime.Now()
-    for i in range (0, 7):
-        date = now - Datetime.Delta(days = i)
-        
-        oc.add(
-            DirectoryObject(
-                key = 
-                    Callback(
-                        VideosFromSchedule,
-                        title = channel.title,
-                        url = "%s/%02d%02d%02d" % (channel.schedule_url, date.year, date.month, date.day)
-                    ),
-                title = DAYS[date.weekday()],
-                thumb = R("%s.png" % channel_id)
+    if channel.has_scheduled_programmes():
+        # Add the last week's worth of schedules
+        now = Datetime.Now()
+        for i in range (0, 7):
+            date = now - Datetime.Delta(days = i)
+            
+            if i == 0:
+                title = "Today"
+            else:
+                title = DAYS[date.weekday()] + " " + str(date.day) + suffix(date.day)
+            
+            oc.add(
+                DirectoryObject(
+                    key = 
+                        Callback(
+                            VideosFromSchedule,
+                            title = channel.title,
+                            url = "%s/%02d%02d%02d" % (channel.schedule_url, date.year, date.month, date.day)
+                        ),
+                    title = title,
+                    thumb = R(channel.thumb)
+                )
             )
-        )
 
+    oc.add(
+        DirectoryObject(
+            key =
+                Callback(
+                    AllEpisodes,
+                    title = "A-Z",
+                    url = channel.az_url(),
+                    xpath = "//*[@class='gel-layout']//*[contains(@class, 'gel-layout__item')]",
+                    page_num = 1,
+                    mixed_shows = True
+                ),
+            title = "A-Z",
+            thumb = R(channel.thumb)
+        )
+    )
     return oc
 
 ##########################################################################################
 @route(PREFIX + "/VideosFromSchedule")
-def VideosFromSchedule(title, url, channel_id = None):
-    # this function generates the schedule lists for today / yesterday etc
-    oc = ObjectContainer(title2 = title)
-
-    return Episodes(
-        title = title,
-        url = url,
-        xpath = "//*[contains(@class, 'broadcast-list')]//*[contains(@class, 'broadcast')]"
-    )
+def VideosFromSchedule(title, url):
+    return AllEpisodes(title, url, "//*[contains(@class, 'schedule-container')]//*[@class='gel-layout']", 1, True)
 
 ##########################################################################################
-@route(PREFIX + '/highlights')
-def Highlights(title, url):
-    return Episodes(title, url, "//*[contains(@class, 'gel-layout')]//*[contains(@class, '__item')]")
-
-#########################################################################################
-@route(PREFIX + '/highlights2')
-def Highlights2(title, url):
-    return Episodes(title, url, "//*[contains(@class, 'main')]//*[contains(@class, '__item')]")
+@route(PREFIX + '/boxsets')
+def BoxSets(title, url):
+    return AllEpisodes(title, url, "//*[@class='gel-layout']//*[contains(@class, 'gel-layout__item')]", 1, True)
 
 ##########################################################################################
 @route(PREFIX + '/mostpopular')
 def MostPopular(title, url):
-    return Episodes(title, url, "//*[contains(@class, 'most-popular')]//*[contains(@class, '__item')]")
+    return AllEpisodes(title, url, "//*[@class='gel-layout']//*[contains(@class, 'gel-layout__item')]", 1, True)
 
 ##########################################################################################
 @route(PREFIX + '/categories')
@@ -289,8 +297,10 @@ def Categories(title):
     for item in pageElement.xpath("//*[@class='categories-container']//a[@class='typo typo--canary stat']"): 
         url = item.xpath("./@href")[0]
 
-        if not "/iplayer/categories" in url:
+        if not "/iplayer/categories/" in url:
             continue
+
+        url = url.replace("featured", "a-z")
 
         if not url.startswith("http"):
             url = config.BBC_URL + url
@@ -301,11 +311,15 @@ def Categories(title):
             DirectoryObject(
                 key = 
                     Callback(
-                        Highlights2,
+                        AllEpisodes,
                         title = title,
-                        url = url
+                        url = url,
+                        xpath = "//*[@class='gel-layout']//*[contains(@class, 'gel-layout__item')]",
+                        page_num = 1,
+                        mixed_shows = True
                     ),
-                title = title
+                title = title,
+                thumb = R("icon-default.jpg")
             )
         )
 
@@ -325,7 +339,8 @@ def AToZ(title, url):
                         url = url,
                         letter = letter.lower()
                     ),
-                title = letter.upper()
+                title = letter.upper(),
+                thumb = R("icon-default.jpg")
             )
         )
 
@@ -338,129 +353,54 @@ def ProgramsByLetter(url, letter):
 
     pageElement = HTML.ElementFromURL(url + letter)
 
-    for item in pageElement.xpath("//*[@id='atoz-content']//a[contains(@class,'tleo')]"):
+    for item in pageElement.xpath("//*[contains(@class,'atoz-grid')]//a[contains(@class,'list-content-item')]"):
         url = item.xpath("./@href")[0]
-
-        if not "/iplayer/brand" in url:
-            continue
 
         if not url.startswith("http"):
             url = config.BBC_URL + url
 
-        title = item.xpath(".//*[@class='title']/text()")[0].strip()
+        title = item.xpath(".//*[contains(@class, 'list-content-item__title')]/text()")[0].strip()
+
+        try:
+            thumb = item.xpath(".//*[contains(@class,'image')]//*/@srcset")[0].split(' ')[0]
+        except:
+            thumb = None
 
         oc.add(
             DirectoryObject(
                 key = 
                     Callback(
-                        Programs,
+                        Episode,
                         title = title,
-                        url = url
+                        url = url,
+                        xpath = "//*[contains(@class, 'grid list__grid')]//*[contains(@class, 'gel-layout__item')]"
                     ),
-                title = title
+                title = title,
+                thumb = Resource.ContentsOfURLWithFallback(thumb)
             )
         )
 
     return oc
 
 ##########################################################################################
-@route(PREFIX + "/programs")
-def Programs(title, url):
+@route(PREFIX + "/episode")
+def Episode(title, url, xpath):
     oc = ObjectContainer(title2 = title)
-
-    brand = url.split("/")[-1]
-    page = 1 
-    try:
-        pageElement = HTML.ElementFromURL(config.BBC_URL + '/programmes/%s/episodes/player?page=%d' % (brand, page))
-    except:
-        pageElement = None
-
-    if pageElement:
-        while (page < 20 and pageElement):
-            for item in pageElement.xpath("//*[contains(@class, 'programmes-page')]//*[contains(@typeof, 'Episode')]"):
-                try:
-                    url = item.xpath(".//*[@property='video']/a/@resource")[0]
-                except:
-                    continue
-                
-                if not url.startswith("http"):
-                    url = config.BBC_URL + url
-                    
-                try:
-                    title = item.xpath(".//*[contains(@class, 'programme__title')]//*[@property='name']/text()")[0].strip()
-                except:
-                    title = None
-
-                try:
-                    thumb = item.xpath(".//meta[@property='image']/@content")[0]
-                except:
-                    thumb = None
-
-                try:
-                    summary = item.xpath(".//*[contains(@class, 'programme__synopsis')]//*[@property='description']/text()")[0].strip()
-                except:
-                    summary = None
-                
-                try:
-                    index = int(item.xpath(".//*[contains(@class, 'programme__synopsis')]//*[@property='position']/text()")[0].strip())
-                except:
-                    index = None
-                    
-                try:
-                    season = int(item.xpath(".//*[contains(@typeof, 'Season')]//*[@property='name']/text()")[0].strip())
-                except:
-                    season = None
-                
-                oc.add(
-                    EpisodeObject(
-                        url = url,
-                        title = title,
-                        index = index,
-                        season = season,
-                        thumb = Resource.ContentsOfURLWithFallback(thumb),
-                        summary = summary
-                    )
-                )     
-            page = page + 1
-            try:
-                pageElement = HTML.ElementFromURL(config.BBC_URL + '/programmes/%s/episodes/player?page=%d' % (brand, page))
-            except:
-                pageElement = None
-
-        return oc
-
+    pageElement = HTML.ElementFromURL(url)
+    allEpisodesUrl = pageElement.xpath(".//*[contains(@class, 'section__header__cta')]/@href")
+    if len(allEpisodesUrl) == 1:
+        allEpisodesUrl = config.BBC_URL + allEpisodesUrl[0]
     else:
-        # Program with only one episode available
-        pageElement = HTML.ElementFromURL(url)
+        programmeUrl = pageElement.xpath(".//*[contains(@href, '/programmes')]/@href")[0]
+        parts = programmeUrl.split('/')
+        if len(parts) == 3:
+            allEpisodesUrl = "https://www.bbc.co.uk/iplayer/episodes/" + parts[2]
+    
 
-        url = pageElement.xpath("//meta[@property='og:url']/@content")[0]
-        title = ''.join(pageElement.xpath("//*[@id='show-info']//*[@id='title']//text()")).strip()
-        summary = ''.join(pageElement.xpath("//*[@id='show-info']//*[@id='long-description']//text()")).strip()
+    if allEpisodesUrl:
+        return AllEpisodes(title, allEpisodesUrl, "//*[@class='gel-layout']//*[contains(@class, 'grid__item')]", 1, False)
 
-        thumb = pageElement.xpath("//meta[@property='og:image']/@content")[0]
-
-        try:
-            originally_available_at = Datetime.ParseDate(''.join(item.xpath("//*[@id='show-info']//*[@class='release']//text()")).split(":")[1].strip()).date()
-        except:
-            originally_available_at = None
-
-        try:
-            duration = int(RE_DURATION.search(''.join(item.xpath("//*[@id='show-info']//*[@class='duration']//text()"))).groups()[0]) * 60 * 1000
-        except:
-            duration = None
-
-        oc.add(
-            VideoClipObject(
-                url = url,
-                title = title,
-                summary = summary,
-                thumb = Resource.ContentsOfURLWithFallback(thumb),
-                originally_available_at = originally_available_at,
-                duration = duration
-            )
-        )
-
-        return oc
+    return NoProgrammesFound(oc, title)
 
 ##########################################################################################
 @route(PREFIX + "/Search")
@@ -468,44 +408,40 @@ def Search(query):
 
     url = config.BBC_SEARCH_TV_URL % String.Quote(query)
 
-    return Episodes(
+    return AllEpisodes(
         title = query,
         url = url,
-        xpath = "//*[contains(@class,'iplayer-list')]//*[contains(@class,'list-item')]",
-        page_num = 1
+        xpath = "//*[@class='gel-layout']//li[contains(@class, 'gel-layout__item')]",
+        page_num = 1,
+        mixed_shows = True
     )
 
 ##########################################################################################
-@route(PREFIX + '/episodes', page_num = int)
-def Episodes(title, url, xpath, page_num = None):
+@route(PREFIX + '/allepisodes', page_num = int, mixed_shows = bool)
+def AllEpisodes(title, url, xpath, page_num, mixed_shows):
     oc = ObjectContainer(title2 = title)
     orgURL = url
 
-    if page_num is not None:
-        if not '?' in url:
-            url = url + "?"
-        else:
-            url = url + "&"
+    if page_num is None:
+        page_num = 1
 
-        url = url + "page=%s" % page_num
+    if not '?' in url:
+        url = url + "?"
+    else:
+        url = url + "&"
+
+    url = url + "page=%s" % page_num
 
     pageElement = HTML.ElementFromURL(url)
     items = pageElement.xpath(xpath)
+    show = title
 
-    links = []
     for item in items:
-        is_group = False
         try:
             link = item.xpath(".//a/@href")[0]
 
-            if not ('/episode/' in link or '/group/' in link):
+            if not ('/episode/' in link):
                 continue
-
-            is_group = '/group/' in link
-
-            if is_group:
-                if '-' in link.split("group")[1]:
-                    continue
 
             if not link.startswith('http'):
                 link = config.BBC_URL + link
@@ -513,211 +449,70 @@ def Episodes(title, url, xpath, page_num = None):
             continue
 
         try:
-            title = item.xpath(".//a/@title")[0].strip()
+            title = item.xpath(".//a//*[contains(@class, 'content-item__title')]/text()")[0].strip()
         except:
-            title = None
-
-        if not title:
-            if is_group:
-                try:
-                    title = ''.join(item.xpath(".//a//text()")[0]).strip()
-                except:
-                    pass
-
-            if not title:
-                try:
-                    title = item.xpath(".//a//*[contains(@class, 'item__subtitle')]/text()")[0].strip()
-                except:
-                    title = None
-
-            if not title:
-                try:
-                    title = item.xpath(".//a//*[contains(@class, 'item__title')]/text()")[0].strip()
-                except:
-                    title = None
-
-        if not title:
-            try:
-                if is_group:
-                    title = item.xpath(".//a/strong/text()")[0].strip()
-                else:
-                    title = item.xpath(".//a//*[contains(@class, 'item__title')]//strong/text()")[0].strip()
-            except:
-                title = None
-
-        if not title:
-            try:
-                title = item.xpath(".//a/strong/text()")[0].strip()
-            except:
-                title = None
-
-        if not title:
-            continue
-
-        if link not in links:
-            links.append(link)
-        else:
-            # Duplicate
-            continue
+            title = show
 
         try:
-            show = item.xpath(".//a//*[contains(@class, 'item__title')]//strong/text()")[0]
-        except:
-            if is_group:
-                show = title
-            else:
-                show = None
-
-        try:
-            index = int(RE_EPISODE.search(show).groups()[0])
-        except:
-            index = None
-
-        try:
-            season = int(RE_SERIES.search(show).groups()[0])
-
-            if not index:
-                try:
-                    index = int(RE_EPISODE_ALT.search(show).groups()[0])
-                except:
-                    pass
-        except:
-            season = None
-
-        try:
-            thumb = item.xpath(".//*[contains(@class,'image')]//*/@srcset")[0]
+            thumb = item.xpath(".//*[contains(@class,'image')]//*/@srcset")[0].split(' ')[0]
         except:
             thumb = None
 
         try:
-            if is_group:
-                summary = item.xpath(".//*[contains(@class,'item-count')]/text()")[0]
-            else:
-                summary = ''.join(item.xpath(".//*[@class='synopsis']//text()")).strip()
-
-                if not summary:
-                    try:
-                        summary = item.xpath(".//*[contains(@class, 'item__overlay__desc')]/text()")[0]
-                    except:
-                        summary = None
-
-                if not summary:
-                    try:
-                        summary = item.xpath(".//*[contains(@class, 'overlay__text__inner')]/text()")[0]
-                    except:
-                        summary = None
-
-                if not summary:
-                    try:
-                        summary = '\n\n'.join(item.xpath(".//*[contains(@class, '__description')]/text()"))
-                    except:
-                        summary = None
-
+            summary = item.xpath(".//a//*[contains(@class, 'content-item__description')]/text()")[1].strip()
         except:
             summary = None
 
         try:
-            originally_available_at = Datetime.ParseDate(item.xpath(".//*[@class='release']/text()")[0].split(":")[1].strip()).date()
+            background = pageElement.xpath(".//*[contains(@class,'rs-image hero-header__background__image')]//*/@srcset")[0]
         except:
-            try:
-                originally_available_at = Datetime.ParseDate(item.xpath(".//*[contains(@class, 'item__overlay__subtitle')]/text()")[0].split(":")[1]).date()
-            except:
-                originally_available_at = None
+            background = None
             
-        try:
-            duration = int(RE_DURATION.search(''.join(item.xpath(".//*[@class='duration']/text()"))).groups()[0]) * 60 * 1000
-        except:
-            try:
-                duration = int(RE_DURATION.search(''.join(item.xpath(".//*[contains(@class, 'item__overlay__label')]//text()")).strip().lower()).groups()[0]) * 60 * 1000
-            except:
-                duration = None
-
-        # Check if a link to more episodes exists
-        link_more = item.xpath(".//*[contains(@class,'view-more-container')]/@href")
-
-        if len(link_more) == 1:
-            link_more = link_more[0]
-
-            if not link_more.startswith("http"):
-                link_more = config.BBC_URL + link_more
-
-            try:
-                newTitle = title.split(",")[0]
-
-                try:
-                    noEpisodes = item.xpath(".//em/text()")[0].strip()
-
-                    newTitle = newTitle + ': %s episodes' % noEpisodes
-                except:
-                    pass
-            except:
-                pass
-
+        if mixed_shows:
             oc.add(
                 DirectoryObject(
-                    key =
+                    key = 
                         Callback(
-                            Episodes,
-                            title = newTitle,
-                            url = link_more,
-                            xpath = xpath,
-                            page_num = page_num
-                        ),
-                    title = newTitle,
-                    thumb = Resource.ContentsOfURLWithFallback(thumb)
-                )
-            )
-
-        if is_group:            
-            oc.add(
-                DirectoryObject(
-                    key =
-                        Callback(
-                            Episodes,
+                            Episode,
                             title = title,
                             url = link,
-                            xpath = "//*[contains(@class,'iplayer-list')]//*[contains(@class,'list-item')]",
-                            page_num = page_num
+                            xpath = "//*[contains(@class, 'grid list__grid')]//*[contains(@class, 'gel-layout__item')]"
                         ),
                     title = title,
                     thumb = Resource.ContentsOfURLWithFallback(thumb)
                 )
             )
-
         else:
             oc.add(
                 EpisodeObject(
                     url = link,
                     title = title,
                     show = show,
-                    index = index,
-                    season = season,
                     thumb = Resource.ContentsOfURLWithFallback(thumb),
-                    summary = summary,
-                    originally_available_at = originally_available_at,
-                    duration = duration
+                    art = Resource.ContentsOfURLWithFallback(background),
+                    summary = summary
                 )
             )
 
     if len(oc) < 1:
         return NoProgrammesFound(oc, title)
 
-    elif page_num is not None:
         # See if we need a next button.
-        if len(pageElement.xpath("//*[@class='next txt']")) > 0:            
-            oc.add(
-                NextPageObject(
-                    key = 
-                        Callback(
-                            Episodes,
-                            title = oc.title2, 
-                            url = orgURL,
-                            xpath = xpath,
-                            page_num = int(page_num) + 1
-                        ),
-                    title = 'More...'
-                )
+    if len(pageElement.xpath("//a[contains(@class, 'pagination__direction--next')]")) > 0:            
+        oc.add(
+            DirectoryObject(
+                key = 
+                    Callback(
+                        AllEpisodes,
+                        title = oc.title2, 
+                        url = orgURL,
+                        xpath = xpath,
+                        page_num = int(page_num) + 1,
+                        mixed_shows = mixed_shows
+                    ),
+                title = 'More...'
             )
+        )
         
     return oc
 
@@ -865,3 +660,7 @@ def PlayAudio(url):
         return Redirect(stream_url)
     else:
         raise Ex.MediaNotAvailable
+
+#################################################################################################### 
+def suffix(d):
+    return 'th' if 11<=d<=13 else {1:'st',2:'nd',3:'rd'}.get(d%10, 'th')
