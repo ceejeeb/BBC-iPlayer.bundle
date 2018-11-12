@@ -59,10 +59,10 @@ def MediaObjectsForURL(url):
 
     if 'hd_live_id' in TV_CHANNEL_LOOKUP[channel]:
         live_id = TV_CHANNEL_LOOKUP[channel]['hd_live_id']
-        hls_url = 'http://a.files.bbci.co.uk/media/live/manifesto/audio_video/simulcast/hls/uk/abr_hdtv/ak/%s.m3u8' % (live_id)
+        hls_url = 'http://a.files.bbci.co.uk/media/live/manifesto/audio_video/simulcast/hls/uk/abr_hdtv/llnw/%s.m3u8' % (live_id)
     else:
         live_id = TV_CHANNEL_LOOKUP[channel]['live_id']
-        hls_url = 'http://a.files.bbci.co.uk/media/live/manifesto/audio_video/simulcast/hls/uk/hls_tablet/ak/%s.m3u8' % (live_id)
+        hls_url = 'http://a.files.bbci.co.uk/media/live/manifesto/audio_video/simulcast/hls/uk/hls_tablet/llnw/%s.m3u8' % (live_id)
     
     # Fix for Plex Web clients(avoid M3U8 cross domain access denied)
     if Client.Product in ['Plex Web'] and Client.Platform not in ['Safari']:
